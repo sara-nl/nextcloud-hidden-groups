@@ -78,4 +78,4 @@ make test nc=35
 ```
 
 `tests/e2e/e2e.sh` can also run against an existing test server over SSH, see the comment at the top of the script.
-GitHub Actions runs the tests on Nextcloud 34 and 35 for every pull request, and weekly against the newest Nextcloud release.
+GitHub Actions runs the tests on Nextcloud 34 and 35 for every pull request, and monthly against the newest Nextcloud release.
