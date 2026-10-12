@@ -1,0 +1,11 @@
+{ "translations": {
+    "Sharing with this group is not allowed." : "No está permitido compartir con este grupo.",
+    "Hidden groups" : "Grupos ocultos",
+    "Keep groups that are only meant for configuration out of sharing" : "Impide compartir con los grupos que solo están pensados para la configuración",
+    "Some groups are only meant for configuration, such as enabling an app for everyone, and are far too large to share with.\n\nAdmins can hide such groups in the sharing settings. Nobody can share files or folders with a hidden group, and hidden groups do not show up in sharing suggestions. Existing shares with a hidden group keep working, but cannot get more permissions." : "Algunos grupos solo están pensados para la configuración, como habilitar una aplicación para todos, y son demasiado grandes para compartir con ellos.\n\nLos administradores pueden ocultar estos grupos en los ajustes de compartir. Nadie puede compartir archivos ni carpetas con un grupo oculto, y los grupos ocultos no aparecen en las sugerencias al compartir. Los recursos compartidos existentes con un grupo oculto siguen funcionando, pero no pueden obtener más permisos.",
+    "Hidden groups saved" : "Grupos ocultos guardados",
+    "Failed to save the hidden groups" : "No se pudieron guardar los grupos ocultos",
+    "Nobody can share files or folders with these groups, and they do not show up in suggestions, for example in the share dialog. Use this for large groups that are only meant for configuration, such as enabling an app for everyone. Existing shares keep working, but cannot get more permissions. Calendars, address books and teams that contain such a group are not covered." : "Nadie puede compartir archivos ni carpetas con estos grupos, y tampoco aparecen en las sugerencias, por ejemplo en el diálogo para compartir. Utilice esta opción para grupos grandes que solo están pensados para la configuración, como habilitar una aplicación para todos. Los recursos compartidos existentes siguen funcionando, pero no pueden obtener más permisos. Esto no se aplica a los calendarios, las libretas de direcciones ni los equipos que contengan uno de estos grupos.",
+    "Groups that nobody can share with" : "Grupos con los que nadie puede compartir"
+},"pluralForm" :"nplurals=3; plural=n == 1 ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;"
+}

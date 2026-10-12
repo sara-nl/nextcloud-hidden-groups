@@ -1,0 +1,13 @@
+OC.L10N.register(
+    "hidden_groups",
+    {
+    "Sharing with this group is not allowed." : "Teilen mit dieser Gruppe ist nicht erlaubt.",
+    "Hidden groups" : "Ausgeblendete Gruppen",
+    "Keep groups that are only meant for configuration out of sharing" : "Gruppen, die nur zur Konfiguration gedacht sind, beim Teilen ausblenden",
+    "Some groups are only meant for configuration, such as enabling an app for everyone, and are far too large to share with.\n\nAdmins can hide such groups in the sharing settings. Nobody can share files or folders with a hidden group, and hidden groups do not show up in sharing suggestions. Existing shares with a hidden group keep working, but cannot get more permissions." : "Manche Gruppen sind nur zur Konfiguration gedacht, etwa um eine App für alle zu aktivieren, und viel zu groß, um mit ihnen zu teilen.\n\nDie Administration kann solche Gruppen in den Einstellungen zum Teilen ausblenden. Niemand kann Dateien oder Ordner mit einer ausgeblendeten Gruppe teilen, und ausgeblendete Gruppen werden in den Vorschlägen beim Teilen nicht angezeigt. Bestehende Freigaben mit einer ausgeblendeten Gruppe funktionieren weiterhin, können aber keine zusätzlichen Berechtigungen erhalten.",
+    "Hidden groups saved" : "Ausgeblendete Gruppen gespeichert",
+    "Failed to save the hidden groups" : "Ausgeblendete Gruppen konnten nicht gespeichert werden",
+    "Nobody can share files or folders with these groups, and they do not show up in suggestions, for example in the share dialog. Use this for large groups that are only meant for configuration, such as enabling an app for everyone. Existing shares keep working, but cannot get more permissions. Calendars, address books and teams that contain such a group are not covered." : "Niemand kann Dateien oder Ordner mit diesen Gruppen teilen, und sie werden in den Vorschlägen nicht angezeigt, zum Beispiel im Freigabedialog. Verwende dies für große Gruppen, die nur zur Konfiguration gedacht sind, etwa um eine App für alle zu aktivieren. Bestehende Freigaben funktionieren weiterhin, können aber keine zusätzlichen Berechtigungen erhalten. Kalender, Adressbücher und Teams, die eine solche Gruppe enthalten, werden davon nicht erfasst.",
+    "Groups that nobody can share with" : "Gruppen, mit denen niemand teilen kann"
+},
+"nplurals=2; plural=(n != 1);");
