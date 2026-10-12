@@ -26,6 +26,20 @@ jobs:
       - run: composer cs:check
       - run: composer psalm
 
+  php-next:
+    # Check against the API of the next Nextcloud version, to notice removed or deprecated APIs before the release
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+      - run: composer config platform.php 8.4
+      - run: composer require --dev --no-interaction --no-progress -W nextcloud/ocp:dev-master
+      - run: composer psalm
+
   frontend:
     runs-on: ubuntu-latest
     steps:
