@@ -1,0 +1,41 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Nextcloud hidden_groups\n"
+"PO-Revision-Date: 2026-10-12 12:00+0200\n"
+"Last-Translator: \n"
+"Language-Team: de_DE\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: de_DE\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Sharing with this group is not allowed."
+msgstr "Teilen mit dieser Gruppe ist nicht erlaubt."
+
+msgid "Hidden groups"
+msgstr "Ausgeblendete Gruppen"
+
+msgid "Keep groups that are only meant for configuration out of sharing"
+msgstr "Gruppen, die nur zur Konfiguration gedacht sind, beim Teilen ausblenden"
+
+msgid ""
+"Some groups are only meant for configuration, such as enabling an app for everyone, and are far too large to share with.\n"
+"\n"
+"Admins can hide such groups in the sharing settings. Nobody can share files or folders with a hidden group, and hidden groups do not show up in sharing suggestions. Existing shares with a hidden group keep working, but cannot get more permissions."
+msgstr ""
+"Einige Gruppen sind nur zur Konfiguration gedacht, etwa um eine App für alle zu aktivieren, und sind viel zu groß, um mit ihnen zu teilen.\n"
+"\n"
+"Die Administration kann solche Gruppen in den Einstellungen für das Teilen ausblenden. Niemand kann Dateien oder Ordner mit einer ausgeblendeten Gruppe teilen, und ausgeblendete Gruppen werden nicht in den Vorschlägen beim Teilen angezeigt. Bestehende Freigaben mit einer ausgeblendeten Gruppe funktionieren weiterhin, können aber keine weiteren Berechtigungen erhalten."
+
+msgid "Hidden groups saved"
+msgstr "Ausgeblendete Gruppen gespeichert"
+
+msgid "Failed to save the hidden groups"
+msgstr "Ausgeblendete Gruppen konnten nicht gespeichert werden"
+
+msgid "Nobody can share files or folders with these groups, and they do not show up in suggestions, for example in the share dialog. Use this for large groups that are only meant for configuration, such as enabling an app for everyone. Existing shares keep working, but cannot get more permissions. Calendars, address books and teams that contain such a group are not covered."
+msgstr "Niemand kann Dateien oder Ordner mit diesen Gruppen teilen, und sie werden nicht in den Vorschlägen angezeigt, zum Beispiel im Freigabedialog. Verwenden Sie dies für große Gruppen, die nur zur Konfiguration gedacht sind, etwa um eine App für alle zu aktivieren. Bestehende Freigaben funktionieren weiterhin, können aber keine weiteren Berechtigungen erhalten. Kalender, Adressbücher und Teams, die eine solche Gruppe enthalten, werden davon nicht erfasst."
+
+msgid "Groups that nobody can share with"
+msgstr "Gruppen, mit denen niemand teilen kann"

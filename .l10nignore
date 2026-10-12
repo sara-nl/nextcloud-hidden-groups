@@ -1,0 +1,10 @@
+# Compiled JavaScript and styles
+css/
+js/
+# Dependencies and build output
+build/
+node_modules/
+vendor/
+# Not shipped
+docs/
+tests/

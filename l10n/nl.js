@@ -1,0 +1,13 @@
+OC.L10N.register(
+    "hidden_groups",
+    {
+    "Sharing with this group is not allowed." : "Delen met deze groep is niet toegestaan.",
+    "Hidden groups" : "Verborgen groepen",
+    "Keep groups that are only meant for configuration out of sharing" : "Houd groepen die alleen bedoeld zijn voor configuratie buiten het delen",
+    "Some groups are only meant for configuration, such as enabling an app for everyone, and are far too large to share with.\n\nAdmins can hide such groups in the sharing settings. Nobody can share files or folders with a hidden group, and hidden groups do not show up in sharing suggestions. Existing shares with a hidden group keep working, but cannot get more permissions." : "Sommige groepen zijn alleen bedoeld voor configuratie, zoals het inschakelen van een app voor iedereen, en zijn veel te groot om mee te delen.\n\nBeheerders kunnen zulke groepen verbergen in de instellingen voor delen. Niemand kan bestanden of mappen delen met een verborgen groep, en verborgen groepen verschijnen niet in de suggesties bij het delen. Bestaande shares met een verborgen groep blijven werken, maar kunnen geen extra machtigingen krijgen.",
+    "Hidden groups saved" : "Verborgen groepen opgeslagen",
+    "Failed to save the hidden groups" : "Opslaan van de verborgen groepen mislukt",
+    "Nobody can share files or folders with these groups, and they do not show up in suggestions, for example in the share dialog. Use this for large groups that are only meant for configuration, such as enabling an app for everyone. Existing shares keep working, but cannot get more permissions. Calendars, address books and teams that contain such a group are not covered." : "Niemand kan bestanden of mappen met deze groepen delen, en ze verschijnen niet in de suggesties, bijvoorbeeld in het dialoogvenster voor delen. Gebruik dit voor grote groepen die alleen bedoeld zijn voor configuratie, zoals het inschakelen van een app voor iedereen. Bestaande shares blijven werken, maar kunnen geen extra machtigingen krijgen. Agenda's, adresboeken en teams die zo'n groep bevatten, vallen hier niet onder.",
+    "Groups that nobody can share with" : "Groepen waarmee niemand kan delen"
+},
+"nplurals=2; plural=(n != 1);");
