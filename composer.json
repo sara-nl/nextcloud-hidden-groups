@@ -1,0 +1,32 @@
+{
+    "name": "sara-nl/hidden_groups",
+    "description": "Nextcloud app to keep groups that are only meant for configuration out of sharing",
+    "type": "project",
+    "license": "AGPL-3.0-or-later",
+    "require": {
+        "php": "^8.2"
+    },
+    "require-dev": {
+        "nextcloud/coding-standard": "^1.5",
+        "nextcloud/ocp": "dev-stable34",
+        "psalm/phar": "^6.20"
+    },
+    "autoload": {
+        "psr-4": {
+            "OCA\\HiddenGroups\\": "lib/"
+        }
+    },
+    "scripts": {
+        "lint": "find . -name \\*.php -not -path './vendor/*' -not -path './build/*' -not -path './node_modules/*' -print0 | xargs -0 -n1 php -l",
+        "cs:check": "php-cs-fixer fix --dry-run --diff",
+        "cs:fix": "php-cs-fixer fix",
+        "psalm": "psalm.phar --no-cache"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true,
+        "platform": {
+            "php": "8.2"
+        }
+    }
+}
