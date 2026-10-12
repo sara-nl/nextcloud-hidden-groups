@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<psalm
+	errorLevel="1"
+	resolveFromConfigFile="true"
+	findUnusedCode="false"
+	findUnusedBaselineEntry="true"
+	phpVersion="8.2"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="https://getpsalm.org/schema/config"
+>
+	<projectFiles>
+		<directory name="lib" />
+		<ignoreFiles>
+			<directory name="vendor" />
+		</ignoreFiles>
+	</projectFiles>
+	<extraFiles>
+		<directory name="vendor/nextcloud/ocp" />
+	</extraFiles>
+	<issueHandlers>
+		<ClassMustBeFinal errorLevel="suppress" />
+	</issueHandlers>
+</psalm>
