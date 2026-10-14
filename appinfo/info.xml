@@ -1,4 +1,8 @@
 <?xml version="1.0"?>
+<!--
+  - SPDX-FileCopyrightText: 2026 Hidden groups contributors
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
 <info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
     <id>hidden_groups</id>
@@ -8,7 +12,7 @@
 
 Admins can hide such groups in the sharing settings. Nobody can share files or folders with a hidden group, and hidden groups do not show up in sharing suggestions. Existing shares with a hidden group keep working, but cannot get more permissions.]]></description>
     <version>1.0.0</version>
-    <licence>agpl</licence>
+    <licence>AGPL-3.0-or-later</licence>
     <author>tosa</author>
     <namespace>HiddenGroups</namespace>
     <types>

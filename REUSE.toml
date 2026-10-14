@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 Hidden groups contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+version = 1
+SPDX-PackageName = "hidden_groups"
+SPDX-PackageSupplier = "Hidden groups contributors"
+SPDX-PackageDownloadLocation = "https://github.com/sara-nl/nextcloud-hidden-groups"
+
+# Files that cannot carry a comment
+[[annotations]]
+path = [".l10nignore", "composer.json", "composer.lock", "package.json", "package-lock.json", "img/app.svg", "img/app-dark.svg", "screenshots/*.png"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Hidden groups contributors"
+SPDX-License-Identifier = "AGPL-3.0-or-later"
+
+# Translations, rewritten by the translation tool. It puts a placeholder copyright line in the template,
+# so this information replaces whatever is in the files.
+[[annotations]]
+path = ["l10n/**.js", "l10n/**.json", "translationfiles/**.po", "translationfiles/**.pot"]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Hidden groups contributors"
+SPDX-License-Identifier = "AGPL-3.0-or-later"

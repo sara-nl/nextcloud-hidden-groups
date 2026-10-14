@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2026 Hidden groups contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 # Starts the official Nextcloud Docker image, installs the app from this checkout
 # and runs the end-to-end test against it. The container is removed afterwards.
 #

@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Hidden groups contributors
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
 # Hidden groups for Nextcloud
 
 Some groups are only meant for configuration, such as enabling an app for everyone, and are far too large to share with.
