@@ -1,6 +1,6 @@
 {
   "name": "hidden_groups",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Nextcloud app to keep groups that are only meant for configuration out of sharing",
   "license": "AGPL-3.0-or-later",
   "private": true,
