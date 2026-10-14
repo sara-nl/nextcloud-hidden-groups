@@ -1,0 +1,322 @@
+# Builds, signs and publishes the app when a GitHub release is published.
+#
+# Adapted from Nextcloud's appstore-build-publish.yml workflow template:
+# https://github.com/nextcloud/.github/blob/master/workflow-templates/appstore-build-publish.yml
+# SPDX-FileCopyrightText: 2021-2024 Nextcloud GmbH and Nextcloud contributors
+# SPDX-FileCopyrightText: 2026 Hidden groups contributors
+# SPDX-License-Identifier: MIT
+#
+# The build job runs npm and Vite without any secrets. Only the publish job gets the signing key,
+# and it runs no code from npm or from the app. It runs in the "appstore" environment: store the
+# secrets there and add required reviewers to it, so every publication is approved first.
+#
+# Secrets in the "appstore" environment:
+#   APP_PRIVATE_KEY  the app's code signing key (hidden_groups.key)
+#   APP_PUBLIC_CRT   the certificate Nextcloud issued for that key (hidden_groups.crt).
+#                    If it is not set, the certificate is downloaded from
+#                    nextcloud/app-certificate-requests.
+#   APPSTORE_TOKEN   API token of the App Store account that owns the app
+#
+# Pre-releases are signed and attached to the GitHub release, but not published to the App Store.
+# When a failed run is re-run after the tarball was attached, the attached tarball is reused,
+# so a signature that was already published stays valid.
+
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    # Do not run in forks
+    if: github.repository == 'sara-nl/nextcloud-hidden-groups'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TAG: ${{ github.event.release.tag_name }}
+    outputs:
+      app_id: ${{ steps.info.outputs.app_id }}
+      app_version: ${{ steps.info.outputs.app_version }}
+      nc_min: ${{ steps.info.outputs.nc_min }}
+      nc_max: ${{ steps.info.outputs.nc_max }}
+      server_ref: ${{ steps.info.outputs.server_ref }}
+    steps:
+      - name: Check out the app
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: app
+          persist-credentials: false
+
+      - name: Read app info and check the tag
+        id: info
+        working-directory: app
+        run: |
+          read -r app_id version nc_min nc_max < <(python3 -c '
+          import xml.etree.ElementTree as ET
+          info = ET.parse("appinfo/info.xml").getroot()
+          nextcloud = info.find("dependencies/nextcloud")
+          print(info.findtext("id").strip(), info.findtext("version").strip(), nextcloud.get("min-version"), nextcloud.get("max-version"))
+          ')
+
+          if [ "$TAG" != "v$version" ]; then
+            echo "::error::Release tag '$TAG' does not match version $version in appinfo/info.xml, expected tag 'v$version'"
+            exit 1
+          fi
+          npm_version=$(python3 -c 'import json; print(json.load(open("package.json")).get("version", ""))')
+          if [ "$npm_version" != "$version" ]; then
+            echo "::warning::package.json has version '$npm_version', appinfo/info.xml has $version"
+          fi
+          if ! grep -qF "## $version" CHANGELOG.md; then
+            echo "::warning::CHANGELOG.md has no section for $version"
+          fi
+
+          # Server release to sign with: min-version as a full tag, e.g. 34 -> v34.0.0
+          IFS=. read -r major minor patch <<< "$nc_min"
+          {
+            echo "app_id=$app_id"
+            echo "app_version=$version"
+            echo "nc_min=$nc_min"
+            echo "nc_max=$nc_max"
+            echo "server_ref=v$major.${minor:-0}.${patch:-0}"
+          } >> "$GITHUB_OUTPUT"
+          echo "$app_id $version, Nextcloud $nc_min - $nc_max"
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          # No dependency cache for release builds
+          package-manager-cache: false
+
+      - name: Build the frontend
+        working-directory: app
+        run: npm ci && npm run build
+
+      - name: Build the tarball
+        working-directory: app
+        env:
+          APP_VERSION: ${{ steps.info.outputs.app_version }}
+        run: make buildapp version="$APP_VERSION"
+
+      - name: Keep the unsigned tarball for the publish job
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: unsigned
+          path: app/build/artifacts/app/${{ steps.info.outputs.app_id }}_${{ steps.info.outputs.app_version }}.tar.gz
+          if-no-files-found: error
+          # The publish job can wait up to 30 days for approval
+          retention-days: 30
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: appstore
+    timeout-minutes: 30
+    permissions:
+      # Attach the tarball to the release
+      contents: write
+    env:
+      TAG: ${{ github.event.release.tag_name }}
+      APP_ID: ${{ needs.build.outputs.app_id }}
+      APP_VERSION: ${{ needs.build.outputs.app_version }}
+      NC_MIN: ${{ needs.build.outputs.nc_min }}
+      NC_MAX: ${{ needs.build.outputs.nc_max }}
+      SERVER_REF: ${{ needs.build.outputs.server_ref }}
+      ASSET: ${{ needs.build.outputs.app_id }}-${{ github.event.release.tag_name }}.tar.gz
+      TARBALL: ${{ github.workspace }}/dist/${{ needs.build.outputs.app_id }}-${{ github.event.release.tag_name }}.tar.gz
+    steps:
+      - name: Check the release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # The release can have been deleted, turned back into a draft or (un)marked as a pre-release
+          # while waiting for approval, so this looks at the release as it is now, not at the event.
+          # Draft releases are not found by their tag.
+          if ! release=$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG"); then
+            echo "::error::Release $TAG does not exist anymore, or is a draft again"
+            exit 1
+          fi
+          if [ "$(jq -r .draft <<< "$release")" != false ]; then
+            echo "::error::Release $TAG is a draft again"
+            exit 1
+          fi
+          echo "prerelease=$(jq -r .prerelease <<< "$release")" >> "$GITHUB_OUTPUT"
+
+          # Only reuse a tarball that an earlier attempt of this run attached, never one uploaded by hand
+          uploader=$(jq -r --arg asset "$ASSET" 'first(.assets[] | select(.name == $asset) | .uploader.login) // ""' <<< "$release")
+          if [ -z "$uploader" ]; then
+            echo "existing=false" >> "$GITHUB_OUTPUT"
+          elif [ "$uploader" = "github-actions[bot]" ] && [ "$GITHUB_RUN_ATTEMPT" -gt 1 ]; then
+            echo "$ASSET was attached by an earlier attempt of this run and is reused"
+            echo "existing=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::$ASSET is already attached to $TAG (uploaded by $uploader). Remove it from the release and run the workflow again"
+            exit 1
+          fi
+
+      - name: Download the unsigned tarball
+        if: steps.release.outputs.existing == 'false'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: unsigned
+          path: unsigned
+
+      - name: Set up PHP
+        if: steps.release.outputs.existing == 'false'
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2.40.0
+        with:
+          php-version: '8.3'
+          # occ does not start without gd and zip
+          extensions: gd, zip
+          coverage: none
+          tools: none
+
+      - name: Check out Nextcloud server ${{ needs.build.outputs.server_ref }}
+        if: steps.release.outputs.existing == 'false'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: nextcloud/server
+          ref: ${{ needs.build.outputs.server_ref }}
+          path: server
+          submodules: true
+          persist-credentials: false
+
+      - name: Write the signing key and certificate
+        env:
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+          APP_PUBLIC_CRT: ${{ secrets.APP_PUBLIC_CRT }}
+        run: |
+          if [ -z "$APP_PRIVATE_KEY" ]; then
+            echo "::error::The APP_PRIVATE_KEY secret is not set"
+            exit 1
+          fi
+          (umask 077 && printf '%s\n' "$APP_PRIVATE_KEY" > "$RUNNER_TEMP/app.key")
+          if [ -n "$APP_PUBLIC_CRT" ]; then
+            printf '%s\n' "$APP_PUBLIC_CRT" > "$RUNNER_TEMP/app.crt"
+          else
+            echo "APP_PUBLIC_CRT is not set, downloading the certificate from nextcloud/app-certificate-requests"
+            curl -fsSL -o "$RUNNER_TEMP/app.crt" \
+              "https://raw.githubusercontent.com/nextcloud/app-certificate-requests/master/$APP_ID/$APP_ID.crt"
+          fi
+
+          cn=$(openssl x509 -in "$RUNNER_TEMP/app.crt" -noout -subject -nameopt RFC2253 | sed -n 's/^subject=.*CN=\([^,]*\).*$/\1/p')
+          if [ "$cn" != "$APP_ID" ]; then
+            echo "::error::The certificate is for '$cn', not for '$APP_ID'"
+            exit 1
+          fi
+          if [ "$(openssl x509 -in "$RUNNER_TEMP/app.crt" -noout -pubkey)" != "$(openssl pkey -in "$RUNNER_TEMP/app.key" -pubout)" ]; then
+            echo "::error::APP_PRIVATE_KEY does not belong to the certificate"
+            exit 1
+          fi
+          echo "Certificate for $cn matches the private key"
+
+      - name: Sign the app
+        if: steps.release.outputs.existing == 'false'
+        run: |
+          unsigned="$GITHUB_WORKSPACE/unsigned/${APP_ID}_$APP_VERSION.tar.gz"
+          stage="$RUNNER_TEMP/stage"
+          rm -rf "$stage"
+          mkdir -p "$stage" "$(dirname "$TARBALL")"
+          tar -xzf "$unsigned" -C "$stage"
+
+          # occ changes into the server directory, so all paths are absolute
+          php server/occ integrity:sign-app \
+            --path="$stage/$APP_ID" \
+            --privateKey="$RUNNER_TEMP/app.key" \
+            --certificate="$RUNNER_TEMP/app.crt"
+
+          tar -czf "$TARBALL" -C "$stage" "$APP_ID"
+
+      - name: Download the attached tarball
+        if: steps.release.outputs.existing == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$ASSET" --dir "$(dirname "$TARBALL")"
+
+      - name: Sign the tarball
+        id: sign
+        run: |
+          tar -tzf "$TARBALL" > "$RUNNER_TEMP/files.txt"
+          for file in appinfo/info.xml appinfo/signature.json; do
+            if ! grep -qx "$APP_ID/$file" "$RUNNER_TEMP/files.txt"; then
+              echo "::error::$file is missing from the tarball"
+              exit 1
+            fi
+          done
+          if ! grep -q "^$APP_ID/js/" "$RUNNER_TEMP/files.txt"; then
+            echo "::error::The built frontend (js/) is missing from the tarball"
+            exit 1
+          fi
+          # A reused tarball can have been signed with an earlier key
+          tar -xzOf "$TARBALL" "$APP_ID/appinfo/signature.json" | jq -r .certificate > "$RUNNER_TEMP/signature.crt"
+          if [ "$(openssl x509 -in "$RUNNER_TEMP/signature.crt" -noout -fingerprint -sha256)" != "$(openssl x509 -in "$RUNNER_TEMP/app.crt" -noout -fingerprint -sha256)" ]; then
+            echo "::error::appinfo/signature.json in the tarball was made with another certificate than APP_PUBLIC_CRT"
+            exit 1
+          fi
+
+          openssl dgst -sha512 -sign "$RUNNER_TEMP/app.key" -out "$RUNNER_TEMP/tarball.sig" "$TARBALL"
+          openssl x509 -in "$RUNNER_TEMP/app.crt" -noout -pubkey > "$RUNNER_TEMP/app.pub"
+          openssl dgst -sha512 -verify "$RUNNER_TEMP/app.pub" -signature "$RUNNER_TEMP/tarball.sig" "$TARBALL"
+          echo "signature=$(openssl base64 -A -in "$RUNNER_TEMP/tarball.sig")" >> "$GITHUB_OUTPUT"
+
+      - name: Attach the tarball to the release
+        if: steps.release.outputs.existing == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        # Without --clobber, so an attached tarball is never replaced
+        run: gh release upload "$TAG" "$TARBALL" --repo "$GITHUB_REPOSITORY"
+
+      - name: Publish to the Nextcloud App Store
+        if: steps.release.outputs.prerelease == 'false'
+        env:
+          APPSTORE_TOKEN: ${{ secrets.APPSTORE_TOKEN }}
+          SIGNATURE: ${{ steps.sign.outputs.signature }}
+        run: |
+          if [ -z "$APPSTORE_TOKEN" ]; then
+            echo "::error::The APPSTORE_TOKEN secret is not set"
+            exit 1
+          fi
+          export DOWNLOAD_URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/$ASSET"
+          # The token goes in a header file, so it does not show up in the process list
+          (umask 077 && printf 'Authorization: Token %s\n' "$APPSTORE_TOKEN" > "$RUNNER_TEMP/appstore.header")
+          python3 -c 'import json, os; print(json.dumps({"download": os.environ["DOWNLOAD_URL"], "signature": os.environ["SIGNATURE"], "nightly": False}))' > "$RUNNER_TEMP/release.json"
+          curl --silent --show-error --fail-with-body -X POST "https://apps.nextcloud.com/api/v1/apps/releases" \
+            -H @"$RUNNER_TEMP/appstore.header" \
+            -H "Content-Type: application/json" \
+            --data @"$RUNNER_TEMP/release.json"
+          echo
+          echo "Published $APP_ID $APP_VERSION to the App Store"
+
+      - name: Skip the App Store for a pre-release
+        if: steps.release.outputs.prerelease == 'true'
+        run: echo "::notice::$TAG is a pre-release, so it is attached to the release but not published to the App Store"
+
+      - name: Summary
+        if: always() && steps.sign.outcome == 'success'
+        env:
+          SIGNATURE: ${{ steps.sign.outputs.signature }}
+        run: |
+          {
+            echo "### $APP_ID $APP_VERSION"
+            echo "Nextcloud $NC_MIN - $NC_MAX, signed with server $SERVER_REF"
+            echo
+            echo "Download: https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/$ASSET"
+            echo
+            echo "Tarball signature, for a manual upload at https://apps.nextcloud.com/developer/apps/releases/new:"
+            echo '```'
+            echo "$SIGNATURE"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove the signing key and token
+        if: always()
+        run: rm -f "$RUNNER_TEMP/app.key" "$RUNNER_TEMP/appstore.header"

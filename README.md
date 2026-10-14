@@ -62,12 +62,50 @@ msgmerge --update translationfiles/nl/hidden_groups.po translationfiles/template
 php translationtool.phar convert-po-files
 ```
 
-### Building a release
+### Releasing
+
+Releases are published to the [Nextcloud App Store](https://apps.nextcloud.com/apps/hidden_groups) by the Release workflow:
+
+1. Set the new version in `appinfo/info.xml` and `package.json`, and describe the changes in `CHANGELOG.md`.
+2. Merge to `main` and check that the tests are green.
+3. Publish a GitHub release with the tag `v<version>`, for example `v1.0.1`, and approve the `appstore` deployment
+   within 30 days. After that the built app has expired and the workflow has to be run again.
+
+The workflow builds the app in a job without secrets. A second job signs it with the app's code signing certificate,
+attaches the tarball to the GitHub release and publishes it to the App Store.
+
+- A pre-release is signed and attached, but not published to the App Store. To publish it later, remove the tarball
+  from the release, turn the release into a draft, untick "Set as a pre-release" and publish it again.
+  Only unticking it does not start the workflow.
+- If a run fails after the tarball was attached, re-run the failed jobs: the attached tarball is reused, not replaced,
+  so a signature the App Store already has stays valid.
+- A tarball that was attached by hand, or by another run, is never signed or published. The workflow stops then:
+  remove the tarball from the release and re-run the workflow.
+- Keep "immutable releases" off in the repository settings, because the tarball is attached after the release was published.
+
+#### One-time setup
+
+1. Request the code signing certificate for `hidden_groups` at [nextcloud/app-certificate-requests](https://github.com/nextcloud/app-certificate-requests),
+   and keep `hidden_groups.key` safe outside the repository.
+2. Register the app on the [App Store](https://apps.nextcloud.com/developer/apps/new) with the certificate and a signature of the app id:
+   `echo -n "hidden_groups" | openssl dgst -sha512 -sign hidden_groups.key | openssl base64`.
+   Then create an API token in your App Store account.
+3. In the GitHub repository, create the environment `appstore` (Settings → Environments). Add required reviewers,
+   limit its deployment tags to `v*`, and add these secrets to it:
+   - `APP_PRIVATE_KEY`: the private key of the code signing certificate (`hidden_groups.key`)
+   - `APP_PUBLIC_CRT`: the certificate Nextcloud issued for it (`hidden_groups.crt`)
+   - `APPSTORE_TOKEN`: the API token of the App Store account that owns the app
+4. Protect the release tags with a tag ruleset for `v*` (Settings → Rules → Rulesets), so only maintainers can create them.
+   The workflow that runs is the one in the tagged commit, so the tag decides which code gets the signing key.
+
+To build a release by hand:
 
 ```
 npm ci && npm run build
-make -e version=v1.0.0 buildapp
+make buildapp version=1.0.1
 ```
+
+The tarball is then in `build/artifacts/app/`. It still has to be signed with `occ integrity:sign-app`.
 
 The app has no runtime Composer dependencies, so `vendor/` is not part of the release.
 Composer is only needed for the development tooling: `composer install`, then `composer psalm` and `composer cs:check`.
