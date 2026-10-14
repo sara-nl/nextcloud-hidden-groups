@@ -154,6 +154,13 @@ script_status() { # <script name> [extension]
 cleanup_admin() { occ user:delete $ADM >/dev/null 2>&1; }
 trap cleanup_admin EXIT
 
+# Right after "occ app:enable" the web server can still use its cached list of enabled apps for a few seconds,
+# so wait until the app's route exists instead of 404 (it answers 401 without a login)
+for _ in $(seq 1 60); do
+	[ "$(curl -s -o /dev/null -w '%{http_code}' -X PUT "$BASE/index.php/apps/hidden_groups/settings/groups")" != 404 ] && break
+	sleep 1
+done
+
 occ group:add $G >/dev/null 2>&1
 occ group:add $BG >/dev/null 2>&1
 for u in $A $B $C; do
